@@ -13,6 +13,7 @@ from flask_migrate import Migrate
 import logging
 from logging import Formatter, FileHandler
 from forms import *
+import sys
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -45,13 +46,7 @@ class Venue(db.Model):
     website = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean, default=False)
     seeking_description = db.Column(db.String(120), nullable=True)
-    past_shows = db.relationship('Show', backref='venue_past', lazy=True)
-    upcoming_shows = db.relationship(
-        'Show', backref='venue_upcoming', lazy=True)
     # Find out how to do a count in SQLA ORM, is it implemented here? COUNT(past_shows)
-    past_shows_count = db.Column(db.Integer)
-    upcoming_shows_count = db.Column(db.Integer)
-
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
 
@@ -66,13 +61,9 @@ class Artist(db.Model):
     genres = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean, nullable=False, default=False)
     seeking_description = db.Column(db.String(120), nullable=True)
-    past_shows = db.relationship('Show', backref='artist_past', lazy=True)
-    upcoming_shows = db.relationship(
-        'Show', backref='artist_upcoming', lazy=True)
-    past_shows_count = db.Column(db.Integer)
-    upcoming_shows_count = db.Column(db.Integer)
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
 
@@ -295,7 +286,7 @@ def create_venue_submission():
     else:
         flash('Venue ' + request.get_json()
               ['name'] + ' was successfully listed!')
-        return render_template('pages/home.html')
+        return redirect(url_for('index'))
 
     # on successful db insert, flash success
     # TODO: on unsuccessful db insert, flash an error instead.
@@ -502,11 +493,45 @@ def create_artist_submission():
     # TODO: insert form data as a new Venue record in the db, instead
     # TODO: modify data to be the data object returned from db insertion
 
+    error = False
+    try:
+        artist = Artist(
+            name=request.get_json()['name'],
+            city=request.get_json()['city'],
+            state=request.get_json()['state'],
+            phone=request.get_json()['phone'],
+            genres=request.get_json()['genres'],
+            image_link=request.get_json()['image_link'],
+            facebook_link=request.get_json()['facebook_link'],
+            website=request.get_json()['website'],
+            seeking_venue=True,
+            seeking_description=request.get_json()['seeking_description']
+        )
+
+        db.session.add(artist)
+        db.session.commit()
+
+    except:
+        db.session.rollback()
+        error = True
+        print(sys.exc_info())
+
+    finally:
+        db.session.close()
+
+    if error:
+        flash('An error occurred. Artist ' +
+              artist.name + ' could not  be listed.')
+        abort(400)
+
+    else:
+        flash('Artist ' + artist.name + ' was successfully listed!')
+        return redirect(url_for('index'))
+
     # on successful db insert, flash success
-    flash('Artist ' + request.form['name'] + ' was successfully listed!')
+
     # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Artist ' + data.name + ' could not be listed.')
-    return render_template('pages/home.html')
+    # e.g.,
 
 
 #  Shows
@@ -567,13 +592,36 @@ def create_shows():
 def create_show_submission():
     # called to create new shows in the db, upon submitting new show listing form
     # TODO: insert form data as a new Show record in the db, instead
+    error = False
+    try:
+        show = Show(
+            artist_id=request.get_json()['artist_id'],
+            venue_id=request.get_json()['venue_id'],
+            start_time=request.get_json()['start_time']
+        )
+
+        db.session.add(show)
+        db.session.commit()
+
+    except ValueError as e:
+        db.session.rollback()
+        print(e)
+        error = True
+        flash('Something went wrong')
+
+    finally:
+        db.session.close()
+
+    if error:
+        abort(400)
+    else:
+        return render_template('pages/home.html')
 
     # on successful db insert, flash success
     flash('Show was successfully listed!')
     # TODO: on unsuccessful db insert, flash an error instead.
     # e.g., flash('An error occurred. Show could not be listed.')
     # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-    return render_template('pages/home.html')
 
 
 @app.errorhandler(404)
