@@ -21,22 +21,4 @@
     <input type="submit" value="Create Venue" class="btn btn-primary btn-lg btn-block">
   </form>
 </div>
-
-<script>
-  const newShow = document.getElementById("show-form").onsubmit = function (e) {
-    e.preventDefault();
-
-    fetch('/shows/create', {
-      method: 'POST',
-      body: JSON.stringify({
-        artist_id: document.getElementById("artist_id").value,
-        venue_id: document.getElementById("venue_id").value,
-        start_time: document.getElementById("start_time").value
-      }),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-  }
-</script>
 {% endblock %}

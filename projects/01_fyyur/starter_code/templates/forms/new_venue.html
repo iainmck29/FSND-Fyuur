@@ -2,7 +2,7 @@
 {% block title %}New Venue{% endblock %}
 {% block content %}
 <div class="form-wrapper">
-  <form method="post" class="form" id="venue-form">
+  <form method="post" class="form">
     <h3 class="form-heading">List a new venue <a href="{{ url_for('index') }}" title="Back to homepage"><i
           class="fa fa-home pull-right"></i></a></h3>
     <div class="form-group">
@@ -61,29 +61,4 @@
     <input type="submit" value="Create Venue" class="btn btn-primary btn-lg btn-block">
   </form>
 </div>
-<script>
-  newVenue = document.getElementById('venue-form').onsubmit = function (e) {
-    e.preventDefault();
-
-    fetch('/venues/create', {
-      method: 'POST',
-      body: JSON.stringify({
-        'name': document.getElementById('name').value,
-        'city': document.getElementById('city').value,
-        'state': document.getElementById('state').value,
-        'address': document.getElementById('address').value,
-        'phone': document.getElementById('phone').value,
-        'genres': document.getElementById('genres').value,
-        'facebook_link': document.getElementById('facebook_link').value,
-        'image_link': document.getElementById('image_link').value,
-        'website_link': document.getElementById('website_link').value,
-        'seeking_talent': document.getElementById('seeking_talent').value,
-        'seeking_description': document.getElementById('seeking_description').value,
-      }),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-  }
-</script>
 {% endblock %}
