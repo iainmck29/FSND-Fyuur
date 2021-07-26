@@ -145,13 +145,19 @@ def create_app(test_config=None):
         data = request.get_json()
         print(data)
         category = data.get('quiz_category')['id']
+
         previous_questions = data.get('previous_questions')
         if category is None:
             abort(404)
 
-        new_question = Question.query.filter(
-            Question.category == category, Question.id.notin_(previous_questions)).first_or_404()
-        new_question = new_question.format()
+        if category == 0:
+            new_question = Question.query.filter(
+                Question.id.notin_(previous_questions)).first_or_404()
+            new_question = new_question.format()
+        else:
+            new_question = Question.query.filter(
+                Question.category == category, Question.id.notin_(previous_questions)).first_or_404()
+            new_question = new_question.format()
 
         previous_questions.append(new_question['id'])
         return jsonify({
